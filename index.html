@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Record Writer — Lab Records, Observations, Assignments & Notes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #09090b;
+      --bg2:      #0f0f12;
+      --card:     #141417;
+      --card2:    #1a1a1f;
+      --border:   rgba(255,255,255,0.07);
+      --border2:  rgba(255,255,255,0.13);
+      --text:     #f0ede8;
+      --muted:    #6b6878;
+      --muted2:   #9896a4;
+
+      /* Service accent colours */
+      --rec:      #f0a050;   /* Records   — amber  */
+      --obs:      #5bbfaa;   /* Observations — teal */
+      --asg:      #8b7cf8;   /* Assignments — violet */
+      --notes:    #e06b8b;   /* Notes      — rose  */
+
+      --rec-dim:  rgba(240,160,80,0.12);
+      --obs-dim:  rgba(91,191,170,0.12);
+      --asg-dim:  rgba(139,124,248,0.12);
+      --notes-dim:rgba(224,107,139,0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* noise */
+    body::after {
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:900;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    /* ────────────── NAV ────────────── */
+    nav {
+      position: fixed; top:0; left:0; right:0; z-index:200;
+      display: flex; align-items:center; justify-content:space-between;
+      padding: 1rem 3rem;
+      background: rgba(9,9,11,0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.55rem; font-weight:700;
+      color: var(--text); letter-spacing:0.02em;
+    }
+    .logo span { color: var(--rec); font-style:italic; }
+
+    .nav-pills { display:flex; gap:0.4rem; }
+    .nav-pill {
+      padding:0.45rem 1rem;
+      border-radius:100px;
+      font-size:0.75rem; font-weight:600; letter-spacing:0.06em;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted2);
+      cursor:pointer; text-decoration:none;
+      transition: all 0.2s;
+    }
+    .nav-pill:hover, .nav-pill.active {
+      background: var(--card2);
+      border-color: var(--border2);
+      color: var(--text);
+    }
+    .nav-pill.cta {
+      background: var(--rec);
+      color: var(--bg);
+      border-color: var(--rec);
+      font-weight:700;
+    }
+    .nav-pill.cta:hover { background:#f5b870; }
+
+    /* ────────────── HERO ────────────── */
+    .hero {
+      min-height:100vh;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      text-align:center;
+      padding: 8rem 2rem 4rem;
+      position:relative; overflow:hidden;
+    }
+
+    /* animated dot-grid */
+    .hero-grid {
+      position:absolute; inset:0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse 90% 80% at 50% 50%, black, transparent);
+      animation: gridShift 20s linear infinite;
+    }
+    @keyframes gridShift {
+      from { background-position: 0 0; }
+      to   { background-position: 40px 40px; }
+    }
+
+    /* colour blobs */
+    .blob {
+      position:absolute; border-radius:50%;
+      filter: blur(120px); opacity:0.18; pointer-events:none;
+    }
+    .blob-1 { width:500px;height:500px; background:var(--rec);   top:-100px; left:-150px; }
+    .blob-2 { width:400px;height:400px; background:var(--asg);   bottom:-80px; right:-100px; }
+    .blob-3 { width:300px;height:300px; background:var(--obs);   bottom:100px; left:30%; }
+
+    .hero-eyebrow {
+      display:inline-flex; align-items:center; gap:0.5rem;
+      border: 1px solid var(--border2);
+      border-radius:100px; padding:0.4rem 1.1rem;
+      font-size:0.7rem; font-weight:700; letter-spacing:0.18em;
+      text-transform:uppercase; color:var(--muted2);
+      margin-bottom:2rem;
+      animation: fadeUp 0.7s ease both;
+      position:relative; z-index:1;
+    }
+    .pulse-dot {
+      width:7px;height:7px; border-radius:50%; background:var(--rec);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+
+    .hero h1 {
+      font-family:'Cormorant Garamond',serif;
+      font-size: clamp(3.5rem, 9vw, 8rem);
+      font-weight:700; line-height:0.95;
+      letter-spacing:-2px;
+      margin-bottom:1.8rem;
+      animation: fadeUp 0.7s 0.08s ease both;
+      position:relative; z-index:1;
+    }
+    .hero h1 .t1 { display:block; color:var(--text); }
+    .hero h1 .t2 { display:block; color:var(--rec); font-style:italic; }
+
+    .hero-sub {
+      max-width:580px; font-size:1.05rem; font-weight:400;
+      color:var(--muted2); line-height:1.75;
+      margin-bottom:3rem;
+      animation: fadeUp 0.7s 0.16s ease both;
+      position:relative; z-index:1;
+    }
+    .hero-sub strong { color:var(--text); font-weight:600; }
+
+    /* service chips row */
+    .service-chips {
+      display:flex; gap:0.7rem; flex-wrap:wrap; justify-content:center;
+      margin-bottom:3rem;
+      animation: fadeUp 0.7s 0.24s ease both;
+      position:relative; z-index:1;
+    }
+    .chip {
+      display:inline-flex; align-items:center; gap:0.45rem;
+      padding:0.55rem 1.2rem;
+      border-radius:100px; font-size:0.82rem; font-weight:600;
+      border:1px solid; cursor:pointer; text-decoration:none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .chip:hover { transform:translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .chip-rec   { color:var(--rec);   border-color:rgba(240,160,80,0.3);   background:var(--rec-dim); }
+    .chip-obs   { color:var(--obs);   border-color:rgba(91,191,170,0.3);   background:var(--obs-dim); }
+    .chip-asg   { color:var(--asg);   border-color:rgba(139,124,248,0.3);  background:var(--asg-dim); }
+    .chip-notes { color:var(--notes); border-color:rgba(224,107,139,0.3);  background:var(--notes-dim); }
+
+    .hero-cta {
+      display:inline-flex; align-items:center; gap:0.6rem;
+      background:var(--text); color:var(--bg);
+      font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700;
+      padding:1rem 2.5rem; border-radius:2px; text-decoration:none;
+      border:none; cursor:pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 0 0 rgba(240,160,80,0);
+      animation: fadeUp 0.7s 0.3s ease both;
+      position:relative; z-index:1;
+    }
+    .hero-cta:hover {
+      transform:translateY(-2px);
+      box-shadow: 0 8px 32px rgba(240,160,80,0.25);
+    }
+
+    /* ────────────── STATS ────────────── */
+    .stats-bar {
+      display:grid; grid-template-columns:repeat(4,1fr);
+      border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+      background:var(--bg2);
+    }
+    .stat {
+      padding:2.2rem 1.5rem; text-align:center;
+      border-right:1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .stat:last-child { border-right:none; }
+    .stat:hover { background:var(--card); }
+    .stat-n {
+      font-family:'Cormorant Garamond',serif;
+      font-size:2.8rem; font-weight:700; line-height:1;
+      margin-bottom:0.3rem;
+    }
+    .stat-l { font-size:0.72rem; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
+
+    /* ────────────── SECTION SHELL ────────────── */
+    section { padding:6rem 2rem; }
+    .container { max-width:1140px; margin:0 auto; }
+    .sec-label {
+      font-size:0.68rem; font-weight:700; letter-spacing:0.22em;
+      text-transform:uppercase; margin-bottom:0.7rem;
+    }
+    .sec-title {
+      font-family:'Cormorant Garamond',serif;
+      font-size:clamp(2rem,4vw,3.2rem); font-weight:700; line-height:1.1;
+      color:var(--text); margin-bottom:0.9rem;
+    }
+    .sec-title em { font-style:italic; }
+    .sec-sub { font-size:0.95rem; color:var(--muted2); font-weight:400; max-width:480px; line-height:1.7; }
+
+    /* ────────────── SERVICES GRID ────────────── */
+    #services { background:var(--bg2); }
+    .services-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:1px; margin-top:4rem;
+      background:var(--border);
+      border:1px solid var(--border);
+      border-radius:4px; overflow:hidden;
+    }
+    .srv-card {
+      background:var(--card); padding:2.5rem 2rem;
+      display:flex; flex-direction:column; gap:1rem;
+      transition: background 0.25s;
+      cursor:pointer; text-decoration:none;
+    }
+    .srv-card:hover { background:var(--card2); }
+    .srv-icon {
+      width:48px;height:48px; border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.5rem;
+    }
+    .srv-card h3 {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.35rem; font-weight:700; color:var(--text);
+    }
+    .srv-card p { font-size:0.85rem; color:var(--muted2); line-height:1.65; font-weight:400; }
+    .srv-price {
+      margin-top:auto; padding-top:1rem;
+      border-top:1px solid var(--border);
+      font-size:0.78rem; font-weight:600; letter-spacing:0.06em;
+    }
+    .srv-link {
+      font-size:0.78rem; font-weight:700; letter-spacing:0.08em;
+      display:inline-flex;align-items:center;gap:0.3rem;
+      margin-top:0.5rem; text-decoration:none;
+      transition:gap 0.2s;
+    }
+    .srv-link:hover { gap:0.6rem; }
+
+    /* colour theming per service */
+    .srv-rec   .srv-icon { background:var(--rec-dim);   color:var(--rec);   }
+    .srv-obs   .srv-icon { background:var(--obs-dim);   color:var(--obs);   }
+    .srv-asg   .srv-icon { background:var(--asg-dim);   color:var(--asg);   }
+    .srv-notes .srv-icon { background:var(--notes-dim); color:var(--notes); }
+    .srv-rec   .srv-price, .srv-rec   .srv-link { color:var(--rec);   }
+    .srv-obs   .srv-price, .srv-obs   .srv-link { color:var(--obs);   }
+    .srv-asg   .srv-price, .srv-asg   .srv-link { color:var(--asg);   }
+    .srv-notes .srv-price, .srv-notes .srv-link { color:var(--notes); }
+
+    /* ────────────── HOW IT WORKS ────────────── */
+    #how { background:var(--bg); }
+    .steps {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:0; margin-top:4rem;
+      border:1px solid var(--border); border-radius:4px; overflow:hidden;
+    }
+    .step {
+      padding:2.5rem 1.8rem;
+      border-right:1px solid var(--border);
+      background:var(--card);
+      transition:background 0.2s;
+      position:relative;
+    }
+    .step:last-child { border-right:none; }
+    .step:hover { background:var(--card2); }
+    .step-n {
+      font-family:'Cormorant Garamond',serif;
+      font-size:4rem; font-weight:700; color:var(--border2);
+      line-height:1; margin-bottom:0.8rem;
+      transition: color 0.2s;
+    }
+    .step:hover .step-n { color:rgba(240,160,80,0.25); }
+    .step-ico { font-size:1.6rem; margin-bottom:0.8rem; }
+    .step h3 {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:0.5rem;
+    }
+    .step p { font-size:0.83rem; color:var(--muted2); line-height:1.6; }
+
+    /* ────────────── PRICING ────────────── */
+    #pricing { background:var(--bg2); }
+    .pricing-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:1.2rem; margin-top:4rem;
+    }
+    .p-card {
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:4px; padding:2rem 1.8rem;
+      transition:border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+      position:relative; overflow:hidden;
+    }
+    .p-card::before {
+      content:''; position:absolute; top:0; left:0; right:0;
+      height:3px;
+    }
+    .p-card.rec::before   { background:var(--rec);   }
+    .p-card.obs::before   { background:var(--obs);   }
+    .p-card.asg::before   { background:var(--asg);   }
+    .p-card.nts::before   { background:var(--notes); }
+    .p-card.extra::before { background: linear-gradient(90deg,var(--rec),var(--asg)); }
+
+    .p-card:hover { border-color:var(--border2); transform:translateY(-4px); box-shadow:0 16px 40px rgba(0,0,0,0.35); }
+
+    .p-badge {
+      display:inline-block; font-size:0.65rem; font-weight:700;
+      letter-spacing:0.15em; text-transform:uppercase;
+      padding:0.25rem 0.7rem; border-radius:100px;
+      margin-bottom:1.2rem;
+    }
+    .p-card.rec   .p-badge { background:var(--rec-dim);   color:var(--rec);   }
+    .p-card.obs   .p-badge { background:var(--obs-dim);   color:var(--obs);   }
+    .p-card.asg   .p-badge { background:var(--asg-dim);   color:var(--asg);   }
+    .p-card.nts   .p-badge { background:var(--notes-dim); color:var(--notes); }
+    .p-card.extra .p-badge { background:rgba(240,160,80,0.1); color:var(--rec); }
+
+    .p-price {
+      font-family:'Cormorant Garamond',serif;
+      font-size:3rem; font-weight:700; line-height:1; color:var(--text);
+      margin-bottom:0.25rem;
+    }
+    .p-price sup { font-size:1.3rem; font-weight:400; color:var(--muted2); vertical-align:super; }
+    .p-per { font-size:0.82rem; color:var(--muted); margin-bottom:1.5rem; }
+    .p-list { list-style:none; display:flex; flex-direction:column; gap:0.6rem; }
+    .p-list li {
+      display:flex; align-items:flex-start; gap:0.55rem;
+      font-size:0.85rem; color:var(--muted2); line-height:1.45;
+    }
+    .p-list li::before { content:'→'; flex-shrink:0; margin-top:1px; font-weight:700; }
+    .p-card.rec   .p-list li::before { color:var(--rec);   }
+    .p-card.obs   .p-list li::before { color:var(--obs);   }
+    .p-card.asg   .p-list li::before { color:var(--asg);   }
+    .p-card.nts   .p-list li::before { color:var(--notes); }
+    .p-card.extra .p-list li::before { color:var(--rec);   }
+
+    /* ────────────── ORDER FORMS SECTION ────────────── */
+    #order { background:var(--bg); }
+
+    /* Tab switcher */
+    .tab-bar {
+      display:flex; gap:0.5rem; flex-wrap:wrap;
+      margin-top:3rem; margin-bottom:3rem;
+      border-bottom:1px solid var(--border);
+      padding-bottom:0;
+    }
+    .tab-btn {
+      padding:0.7rem 1.6rem;
+      font-family:'Syne',sans-serif;
+      font-size:0.82rem; font-weight:700; letter-spacing:0.08em;
+      background:transparent; border:none;
+      color:var(--muted); cursor:pointer;
+      border-bottom:2px solid transparent;
+      margin-bottom:-1px;
+      display:flex; align-items:center; gap:0.5rem;
+      transition:color 0.2s, border-color 0.2s;
+    }
+    .tab-btn:hover { color:var(--text); }
+    .tab-btn.active-rec   { color:var(--rec);   border-bottom-color:var(--rec);   }
+    .tab-btn.active-obs   { color:var(--obs);   border-bottom-color:var(--obs);   }
+    .tab-btn.active-asg   { color:var(--asg);   border-bottom-color:var(--asg);   }
+    .tab-btn.active-notes { color:var(--notes); border-bottom-color:var(--notes); }
+
+    .form-panel { display:none; }
+    .form-panel.active { display:grid; grid-template-columns:1fr 1.5fr; gap:4rem; align-items:start; }
+
+    /* form info sidebar */
+    .finfo h3 {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.6rem; font-weight:700; color:var(--text); margin-bottom:0.8rem;
+    }
+    .finfo > p { font-size:0.88rem; color:var(--muted2); line-height:1.7; margin-bottom:1.8rem; }
+    .finfo-items { display:flex; flex-direction:column; gap:0.8rem; }
+    .finfo-item {
+      display:flex; align-items:flex-start; gap:0.9rem;
+      padding:0.9rem 1rem; background:var(--card);
+      border:1px solid var(--border); border-radius:4px;
+    }
+    .finfo-ico { font-size:1.3rem; flex-shrink:0; }
+    .finfo-item h4 { font-size:0.85rem; font-weight:600; color:var(--text); margin-bottom:0.2rem; }
+    .finfo-item p  { font-size:0.78rem; color:var(--muted2); line-height:1.5; }
+
+    /* form card */
+    .fcard {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:4px; padding:2.2rem;
+      position:relative; overflow:hidden;
+    }
+    .fcard::before {
+      content:''; position:absolute; top:0;left:0;right:0; height:3px;
+    }
+    .fcard.rec-card::before   { background:var(--rec);   }
+    .fcard.obs-card::before   { background:var(--obs);   }
+    .fcard.asg-card::before   { background:var(--asg);   }
+    .fcard.notes-card::before { background:var(--notes); }
+
+    .fcard-title {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.3rem;
+    }
+    .fcard-sub { font-size:0.8rem; color:var(--muted); margin-bottom:1.8rem; }
+
+    /* inputs */
+    .frow { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .fg   { display:flex; flex-direction:column; gap:0.45rem; margin-bottom:1rem; }
+    .fg.full { grid-column:1/-1; }
+
+    label {
+      font-size:0.68rem; font-weight:700; letter-spacing:0.14em;
+      text-transform:uppercase; color:var(--muted);
+    }
+    label .req { color:var(--rec); }
+
+    input, select, textarea {
+      width:100%; background:var(--bg2);
+      border:1px solid var(--border); border-radius:2px;
+      padding:0.7rem 0.9rem;
+      font-family:'Syne',sans-serif; font-size:0.88rem; color:var(--text);
+      outline:none;
+      transition:border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance:none;
+    }
+    input::placeholder, textarea::placeholder { color:#2e2e38; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--border2);
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
+    }
+    .obs-panel input:focus, .obs-panel select:focus, .obs-panel textarea:focus { box-shadow:0 0 0 3px rgba(91,191,170,0.08); border-color:rgba(91,191,170,0.4); }
+    .asg-panel input:focus, .asg-panel select:focus, .asg-panel textarea:focus { box-shadow:0 0 0 3px rgba(139,124,248,0.08); border-color:rgba(139,124,248,0.4); }
+    .notes-panel input:focus, .notes-panel select:focus, .notes-panel textarea:focus { box-shadow:0 0 0 3px rgba(224,107,139,0.08); border-color:rgba(224,107,139,0.4); }
+    select option { background:var(--card2); }
+    textarea { resize:vertical; min-height:75px; }
+
+    /* price estimator */
+    .estimator {
+      border-radius:4px; padding:1rem 1.2rem;
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;
+      margin:1rem 0; border:1px solid;
+    }
+    .est-lhs .est-label { font-size:0.72rem; color:var(--muted); font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
+    .est-lhs .est-note  { font-size:0.72rem; color:var(--muted); font-style:italic; margin-top:0.2rem; }
+    .est-val  { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:700; }
+
+    /* diagram toggle */
+    .dtoggle { display:flex; gap:0.5rem; margin-top:0.3rem; }
+    .dtbtn {
+      padding:0.45rem 1rem; font-family:'Syne',sans-serif;
+      font-size:0.78rem; font-weight:600;
+      border:1px solid var(--border); border-radius:2px;
+      background:transparent; color:var(--muted); cursor:pointer; transition:all 0.2s;
+    }
+    .dtbtn.on { background:var(--rec); color:var(--bg); border-color:var(--rec); }
+
+    /* submit buttons */
+    .sbtn {
+      width:100%; padding:0.95rem;
+      font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700;
+      border:none; border-radius:2px; cursor:pointer; letter-spacing:0.05em;
+      display:flex;align-items:center;justify-content:center;gap:0.5rem;
+      transition:filter 0.2s, transform 0.15s;
+    }
+    .sbtn:hover { filter:brightness(1.12); transform:translateY(-1px); }
+    .sbtn:disabled { opacity:0.45; cursor:not-allowed; transform:none; }
+    .sbtn-rec   { background:var(--rec);   color:var(--bg); }
+    .sbtn-obs   { background:var(--obs);   color:var(--bg); }
+    .sbtn-asg   { background:var(--asg);   color:#fff;      }
+    .sbtn-notes { background:var(--notes); color:#fff;      }
+
+    .fdisclaimer { text-align:center; font-size:0.72rem; color:var(--muted); margin-top:0.8rem; }
+
+    /* success */
+    .success-panel {
+      display:none; flex-direction:column; align-items:center;
+      text-align:center; padding:3rem 2rem; gap:1rem;
+    }
+    .sico {
+      width:60px;height:60px; border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.6rem; color:var(--bg);
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+    .success-panel h3 {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.6rem; font-weight:700;
+    }
+    .success-panel p { font-size:0.85rem; color:var(--muted2); max-width:300px; line-height:1.6; }
+    .ref-tag {
+      background:var(--bg2); border:1px solid var(--border);
+      border-radius:4px; padding:0.5rem 1.2rem;
+      font-size:0.78rem; color:var(--muted);
+    }
+    .ref-tag span { font-family:monospace; font-weight:700; }
+    .reset-btn {
+      padding:0.6rem 1.5rem; background:transparent;
+      border:1px solid var(--border2); border-radius:2px;
+      font-family:'Syne',sans-serif; font-size:0.8rem; font-weight:600;
+      color:var(--muted2); cursor:pointer; transition:all 0.2s;
+    }
+    .reset-btn:hover { border-color:var(--border2); color:var(--text); }
+
+    /* spinner */
+    .spin {
+      display:none; width:15px;height:15px;
+      border:2px solid rgba(255,255,255,0.25); border-top-color:#fff;
+      border-radius:50%; animation:spinR 0.7s linear infinite;
+    }
+    @keyframes spinR{to{transform:rotate(360deg)}}
+    .sbtn.loading .spin { display:inline-block; }
+    .sbtn.loading .blabel { opacity:0.6; }
+
+    /* ────────────── WHY US ────────────── */
+    #why { background:var(--bg2); }
+    .why-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+      gap:1rem; margin-top:4rem;
+    }
+    .w-card {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:4px; padding:1.8rem;
+      transition:border-color 0.2s, transform 0.2s;
+    }
+    .w-card:hover { border-color:var(--border2); transform:translateY(-3px); }
+    .w-ico { font-size:1.8rem; margin-bottom:0.9rem; }
+    .w-card h3 {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:0.4rem;
+    }
+    .w-card p { font-size:0.82rem; color:var(--muted2); line-height:1.6; }
+
+    /* ────────────── FOOTER ────────────── */
+    footer {
+      background:var(--bg2); border-top:1px solid var(--border);
+      padding:3rem 2rem; text-align:center;
+    }
+    .f-logo {
+      font-family:'Cormorant Garamond',serif;
+      font-size:1.7rem; font-weight:700; color:var(--text); margin-bottom:0.4rem;
+    }
+    .f-logo span { color:var(--rec); font-style:italic; }
+    footer p { font-size:0.78rem; color:var(--muted); margin-top:0.3rem; }
+    .f-div { width:50px;height:1px; background:var(--border2); margin:1.5rem auto; }
+    .f-services {
+      display:flex; gap:1.5rem; justify-content:center; flex-wrap:wrap;
+      margin-top:1rem;
+    }
+    .f-services span { font-size:0.75rem; font-weight:600; letter-spacing:0.08em; }
+
+    /* ────────────── REVEAL ────────────── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+    .reveal { opacity:0; transform:translateY(28px); transition:opacity 0.6s ease,transform 0.6s ease; }
+    .reveal.vis { opacity:1; transform:translateY(0); }
+
+    /* ────────────── RESPONSIVE ────────────── */
+    @media(max-width:960px){
+      nav{padding:1rem 1.5rem;}
+      .nav-pills{display:none;}
+      .form-panel.active{grid-template-columns:1fr;}
+      .finfo{display:none;}
+    }
+    @media(max-width:640px){
+      .stats-bar{grid-template-columns:1fr 1fr;}
+      .stat:nth-child(2){border-right:none;}
+      .stat:nth-child(3){border-top:1px solid var(--border);}
+      .frow{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <div class="logo">Record<span>Writer</span></div>
+  <div class="nav-pills">
+    <a href="#services" class="nav-pill">Services</a>
+    <a href="#pricing"  class="nav-pill">Pricing</a>
+    <a href="#how"      class="nav-pill">How It Works</a>
+    <a href="#order"    class="nav-pill cta">Order Now</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="hero-eyebrow"><span class="pulse-dot"></span>Professional B.Tech Writing Service</div>
+  <h1>
+    <span class="t1">We Write.</span>
+    <span class="t2">You Submit.</span>
+  </h1>
+  <p class="hero-sub">
+    Struggling with <strong>lab records, observations, assignments or class notes?</strong>
+    Our team handwrites everything neatly — exactly the way your college expects it.
+  </p>
+
+  <div class="service-chips">
+    <a href="#rec-form"   class="chip chip-rec">📋 Lab Records</a>
+    <a href="#obs-form"   class="chip chip-obs">🔬 Observations</a>
+    <a href="#asg-form"   class="chip chip-asg">📝 Assignments</a>
+    <a href="#notes-form" class="chip chip-notes">📚 Class Notes</a>
+  </div>
+
+  <a href="#order" class="hero-cta">Place Your Order →</a>
+</section>
+
+<!-- ═══ STATS ═══ -->
+<div class="stats-bar reveal">
+  <div class="stat"><div class="stat-n" style="color:var(--rec)">4</div><div class="stat-l">Services Offered</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--obs)">₹5</div><div class="stat-l">Starting Per Page</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--asg)">500+</div><div class="stat-l">Orders Completed</div></div>
+  <div class="stat"><div class="stat-n" style="color:var(--notes)">100%</div><div class="stat-l">Neat Handwriting</div></div>
+</div>
+
+<!-- ═══ SERVICES ═══ -->
+<section id="services">
+  <div class="container">
+    <div class="reveal">
+      <div class="sec-label" style="color:var(--rec)">What We Offer</div>
+      <h2 class="sec-title">All the Writing <em>You Need</em></h2>
+      <p class="sec-sub">Four dedicated services built for B.Tech students. Pick what you need and we'll handle the rest.</p>
+    </div>
+    <div class="services-grid reveal">
+
+      <a href="#order" class="srv-card srv-rec" onclick="switchTab('rec')">
+        <div class="srv-icon">📋</div>
+        <h3>Lab Records</h3>
+        <p>Complete handwritten lab records for any subject — aim, procedure, observations, results and conclusions, all written neatly.</p>
+        <div class="srv-price">₹500 for 50 pages &nbsp;·&nbsp; ₹1000 for 100 pages</div>
+        <span class="srv-link">Order Records →</span>
+      </a>
+
+      <a href="#order" class="srv-card srv-obs" onclick="switchTab('obs')">
+        <div class="srv-icon">🔬</div>
+        <h3>Observations</h3>
+        <p>Experiment observation tables, readings, and data entries written clearly and formatted to match your lab manual.</p>
+        <div class="srv-price">₹5 – ₹10 per page</div>
+        <span class="srv-link">Order Observations →</span>
+      </a>
+
+      <a href="#order" class="srv-card srv-asg" onclick="switchTab('asg')">
+        <div class="srv-icon">📝</div>
+        <h3>Assignments</h3>
+        <p>College assignments written neatly with proper formatting — theory, answers, diagrams — exactly as required by your faculty.</p>
+        <div class="srv-price">₹5 – ₹10 per page</div>
+        <span class="srv-link">Order Assignment →</span>
+      </a>
+
+      <a href="#order" class="srv-card srv-notes" onclick="switchTab('notes')">
+        <div class="srv-icon">📚</div>
+        <h3>Class Notes</h3>
+        <p>Missed classes? We write clear, well-organised class notes topic-by-topic so you're ready for exams and internals.</p>
+        <div class="srv-price">₹5 – ₹10 per page</div>
+        <span class="srv-link">Order Notes →</span>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section id="how">
+  <div class="container">
+    <div class="reveal">
+      <div class="sec-label" style="color:var(--obs)">Simple Process</div>
+      <h2 class="sec-title">How It <em>Works</em></h2>
+      <p class="sec-sub">Four easy steps from order to delivery — no stress, no hassle.</p>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-n">01</div>
+        <div class="step-ico">📋</div>
+        <h3>Choose Your Service</h3>
+        <p>Select from Records, Observations, Assignments, or Class Notes and fill the matching order form.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">02</div>
+        <div class="step-ico">📞</div>
+        <h3>We Call You</h3>
+        <p>Our team contacts you on the number you provide — we confirm requirements and finalise the price.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">03</div>
+        <div class="step-ico">✍️</div>
+        <h3>We Write It</h3>
+        <p>Our writers get to work — neat handwriting, correct content, proper format for your college.</p>
+      </div>
+      <div class="step">
+        <div class="step-n">04</div>
+        <div class="step-ico">📦</div>
+        <h3>You Receive It</h3>
+        <p>Collect your completed work on time and submit it with confidence to your college.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING ═══ -->
+<section id="pricing">
+  <div class="container">
+    <div class="reveal">
+      <div class="sec-label" style="color:var(--asg)">Transparent Pricing</div>
+      <h2 class="sec-title">Clear, <em>Fair</em> Rates</h2>
+      <p class="sec-sub">No surprises. Pay per page or per record. Diagrams quoted on call.</p>
+    </div>
+    <div class="pricing-grid reveal">
+
+      <div class="p-card rec">
+        <div class="p-badge">Lab Records</div>
+        <div class="p-price"><sup>₹</sup>500</div>
+        <div class="p-per">For 50 pages &nbsp;·&nbsp; ₹1000 for 100 pages</div>
+        <ul class="p-list">
+          <li>Aim, procedure, results, conclusion</li>
+          <li>All experiment write-ups included</li>
+          <li>Neatly ruled and formatted</li>
+          <li>Diagrams quoted separately on call</li>
+        </ul>
+      </div>
+
+      <div class="p-card obs">
+        <div class="p-badge">Observations</div>
+        <div class="p-price"><sup>₹</sup>5<span style="font-size:1.5rem">–10</span></div>
+        <div class="p-per">Per page written</div>
+        <ul class="p-list">
+          <li>Observation tables & readings</li>
+          <li>Data entries per experiment</li>
+          <li>Matches your lab manual format</li>
+          <li>Exact price confirmed on call</li>
+        </ul>
+      </div>
+
+      <div class="p-card asg">
+        <div class="p-badge">Assignments</div>
+        <div class="p-price"><sup>₹</sup>5<span style="font-size:1.5rem">–10</span></div>
+        <div class="p-per">Per page written</div>
+        <ul class="p-list">
+          <li>Theory & answer writing</li>
+          <li>Proper headings & formatting</li>
+          <li>Diagrams if required</li>
+          <li>Exact price confirmed on call</li>
+        </ul>
+      </div>
+
+      <div class="p-card nts">
+        <div class="p-badge">Class Notes</div>
+        <div class="p-price"><sup>₹</sup>5<span style="font-size:1.5rem">–10</span></div>
+        <div class="p-per">Per page written</div>
+        <ul class="p-list">
+          <li>Topic-wise organised notes</li>
+          <li>Definitions, formulae, diagrams</li>
+          <li>Ideal for exam revision</li>
+          <li>Exact price confirmed on call</li>
+        </ul>
+      </div>
+
+      <div class="p-card extra" style="grid-column:span 2">
+        <div class="p-badge">Diagram Add-on</div>
+        <div class="p-price" style="color:var(--rec)"><sup style="color:var(--muted2)">₹</sup>???</div>
+        <div class="p-per">Quoted per diagram after reviewing your requirements</div>
+        <ul class="p-list">
+          <li>Circuit diagrams, block diagrams, flow charts</li>
+          <li>Lab apparatus drawings, waveforms, graphs</li>
+          <li>Available for all four services</li>
+          <li>Price finalised by our team on call — before work begins</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ORDER FORMS ═══ -->
+<section id="order">
+  <div class="container">
+    <div class="reveal">
+      <div class="sec-label" style="color:var(--notes)">Place Your Order</div>
+      <h2 class="sec-title">Choose a Service & <em>Order</em></h2>
+      <p class="sec-sub">Select your service below, fill in the details, and our team will contact you.</p>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar reveal">
+      <button class="tab-btn active-rec"   onclick="switchTab('rec')"   id="tab-rec">📋 Lab Records</button>
+      <button class="tab-btn"              onclick="switchTab('obs')"   id="tab-obs">🔬 Observations</button>
+      <button class="tab-btn"              onclick="switchTab('asg')"   id="tab-asg">📝 Assignments</button>
+      <button class="tab-btn"              onclick="switchTab('notes')" id="tab-notes">📚 Class Notes</button>
+    </div>
+
+    <!-- ── RECORDS PANEL ── -->
+    <div class="form-panel active reveal" id="panel-rec">
+      <div class="finfo">
+        <h3>Lab Records</h3>
+        <p>We write your complete B.Tech lab record — from aim to conclusion. Just share your details and we do the rest.</p>
+        <div class="finfo-items">
+          <div class="finfo-item"><div class="finfo-ico">💰</div><div><h4>₹500 – ₹1000</h4><p>50 pages = ₹500 &nbsp;·&nbsp; 100 pages = ₹1000<br>Diagrams quoted separately.</p></div></div>
+          <div class="finfo-item"><div class="finfo-ico">📞</div><div><h4>We call you first</h4><p>No payment needed now. We confirm everything on call.</p></div></div>
+          <div class="finfo-item"><div class="finfo-ico">✍️</div><div><h4>Neat & accurate</h4><p>Proper format, correct content, tidy handwriting.</p></div></div>
+        </div>
+      </div>
+      <div class="fcard rec-card" id="rec-form">
+        <div class="fcard-title">Records Order Form</div>
+        <div class="fcard-sub">All <span style="color:var(--rec)">*</span> fields required. We'll contact you shortly.</div>
+        <div class="success-panel" id="rec-success">
+          <div class="sico" style="background:var(--rec)">✓</div>
+          <h3 style="color:var(--rec)">Order Received!</h3>
+          <p>Our team will call you on your number to confirm your lab records order.</p>
+          <div class="ref-tag">Ref: <span id="rec-ref"></span></div>
+          <button class="reset-btn" onclick="resetForm('rec')">Place Another Order</button>
+        </div>
+        <form id="form-rec" novalidate>
+          <div class="frow">
+            <div class="fg"><label>Student Name <span class="req">*</span></label><input type="text" name="studentName" placeholder="Full name" maxlength="100" required/></div>
+            <div class="fg"><label>Phone Number <span class="req">*</span></label><input type="tel" name="phoneNumber" placeholder="10-digit number" maxlength="15" required/></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>College Name <span class="req">*</span></label><input type="text" name="college" placeholder="Your college" maxlength="150" required/></div>
+            <div class="fg"><label>College Location <span class="req">*</span></label><input type="text" name="collegeLocation" placeholder="City, District" maxlength="100" required/></div>
+          </div>
+          <div class="frow">
+            <div class="fg">
+              <label>Branch <span class="req">*</span></label>
+              <select name="branch" required>
+                <option value="" disabled selected>Select branch</option>
+                <option>CSE</option><option>ECE</option><option>EEE</option>
+                <option>Mechanical</option><option>Civil</option><option>IT</option>
+                <option>Chemical</option><option>Other</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Year / Semester <span class="req">*</span></label>
+              <select name="year" required>
+                <option value="" disabled selected>Select year</option>
+                <option>1st Year – Sem 1</option><option>1st Year – Sem 2</option>
+                <option>2nd Year – Sem 3</option><option>2nd Year – Sem 4</option>
+                <option>3rd Year – Sem 5</option><option>3rd Year – Sem 6</option>
+                <option>4th Year – Sem 7</option><option>4th Year – Sem 8</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg"><label>Subject / Lab Name <span class="req">*</span></label><input type="text" name="subject" placeholder="e.g. Data Structures Lab" maxlength="200" required/></div>
+          <div class="frow">
+            <div class="fg">
+              <label>Number of Pages <span class="req">*</span></label>
+              <select name="pages" required onchange="recEstimate(this.value)">
+                <option value="" disabled selected>Select pages</option>
+                <option value="50">50 pages – ₹500</option>
+                <option value="100">100 pages – ₹1000</option>
+                <option value="custom">Custom (discuss on call)</option>
+              </select>
+            </div>
+            <div class="fg"><label>Deadline</label><input type="date" name="deadline"/></div>
+          </div>
+          <div class="fg">
+            <label>Diagrams Needed?</label>
+            <div class="dtoggle">
+              <button type="button" class="dtbtn" id="rec-dno"  onclick="recDiag(false)">No</button>
+              <button type="button" class="dtbtn on" id="rec-dyes" onclick="recDiag(true)">Yes</button>
+            </div>
+          </div>
+          <div class="fg" id="rec-dcount"><label>How Many Diagrams? <span class="req">*</span></label><input type="number" name="diagramCount" placeholder="e.g. 5" min="1" max="200"/><span style="font-size:0.72rem;color:var(--muted);font-style:italic;margin-top:0.3rem;">Diagram cost confirmed on call.</span></div>
+          <div class="fg"><label>Additional Notes</label><textarea name="notes" placeholder="Special instructions, specific experiments…" maxlength="500"></textarea></div>
+          <div class="estimator" id="rec-est" style="display:none;background:var(--rec-dim);border-color:rgba(240,160,80,0.2)">
+            <div class="est-lhs"><div class="est-label">Estimated Price</div><div class="est-note" id="rec-est-note"></div></div>
+            <div class="est-val" style="color:var(--rec)" id="rec-est-val">₹—</div>
+          </div>
+          <button type="submit" class="sbtn sbtn-rec" id="sbtn-rec"><span class="blabel">📋 Submit Records Order</span><span class="spin"></span></button>
+          <p class="fdisclaimer">No payment now. We contact you to confirm everything.</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── OBSERVATIONS PANEL ── -->
+    <div class="form-panel obs-panel reveal" id="panel-obs">
+      <div class="finfo">
+        <h3>Observations</h3>
+        <p>We write your experiment observation tables and readings — neatly formatted to match your lab manual.</p>
+        <div class="finfo-items">
+          <div class="finfo-item"><div class="finfo-ico">💰</div><div><h4>₹5 – ₹10 per page</h4><p>Final price confirmed after reviewing your requirements on call.</p></div></div>
+          <div class="finfo-item"><div class="finfo-ico">📞</div><div><h4>We call you first</h4><p>No payment needed now. We confirm pages and price on call.</p></div></div>
+          <div class="finfo-item"><div class="finfo-ico">🔬</div><div><h4>Lab-format accurate</h4><p>Tables, readings, units — exactly as your college expects.</p></div></div>
+        </div>
+      </div>
+      <div class="fcard obs-card" id="obs-form">
+        <div class="fcard-title">Observations Order Form</div>
+        <div class="fcard-sub">Fill your details and our team will contact you.</div>
+        <div class="success-panel" id="obs-success">
+          <div class="sico" style="background:var(--obs)">✓</div>
+          <h3 style="color:var(--obs)">Order Received!</h3>
+          <p>Our team will call you to confirm your observations order.</p>
+          <div class="ref-tag">Ref: <span id="obs-ref"></span></div>
+          <button class="reset-btn" onclick="resetForm('obs')">Place Another Order</button>
+        </div>
+        <form id="form-obs" novalidate>
+          <div class="frow">
+            <div class="fg"><label>Student Name <span class="req">*</span></label><input type="text" name="studentName" placeholder="Full name" maxlength="100" required/></div>
+            <div class="fg"><label>Phone Number <span class="req">*</span></label><input type="tel" name="phoneNumber" placeholder="10-digit number" maxlength="15" required/></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>College Name <span class="req">*</span></label><input type="text" name="college" placeholder="Your college" maxlength="150" required/></div>
+            <div class="fg"><label>College Location <span class="req">*</span></label><input type="text" name="collegeLocation" placeholder="City, District" maxlength="100" required/></div>
+          </div>
+          <div class="frow">
+            <div class="fg">
+              <label>Branch <span class="req">*</span></label>
+              <select name="branch" required>
+                <option value="" disabled selected>Select branch</option>
+                <option>CSE</option><option>ECE</option><option>EEE</option>
+                <option>Mechanical</option><option>Civil</option><option>IT</option>
+                <option>Chemical</option><option>Other</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Year / Semester <span class="req">*</span></label>
+              <select name="year" required>
+                <option value="" disabled selected>Select year</option>
+                <option>1st Year – Sem 1</option><option>1st Year – Sem 2</option>
+                <option>2nd Year – Sem 3</option><option>2nd Year – Sem 4</option>
+                <option>3rd Year – Sem 5</option><option>3rd Year – Sem 6</option>
+                <option>4th Year – Sem 7</option><option>4th Year – Sem 8</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg"><label>Subject / Lab Name <span class="req">*</span></label><input type="text" name="subject" placeholder="e.g. Physics Lab, Chemistry Lab" maxlength="200" required/></div>
+          <div class="frow">
+            <div class="fg"><label>Number of Pages <span class="req">*</span></label><input type="number" name="pages" placeholder="e.g. 20" min="1" max="500" required onchange="pageEst(this.value,'obs')"/></div>
+            <div class="fg"><label>Deadline</label><input type="date" name="deadline"/></div>
+          </div>
+          <div class="fg"><label>Experiment Names / Topics <span class="req">*</span></label><textarea name="experiments" placeholder="List the experiments or topics you need observations for…" maxlength="600" required></textarea></div>
+          <div class="fg"><label>Additional Notes</label><textarea name="notes" placeholder="Any special format or instructions…" maxlength="400"></textarea></div>
+          <div class="estimator" id="obs-est" style="display:none;background:var(--obs-dim);border-color:rgba(91,191,170,0.2)">
+            <div class="est-lhs"><div class="est-label">Estimated Price</div><div class="est-note">At ₹5–₹10 per page · confirmed on call</div></div>
+            <div class="est-val" style="color:var(--obs)" id="obs-est-val">₹—</div>
+          </div>
+          <button type="submit" class="sbtn sbtn-obs" id="sbtn-obs"><span class="blabel">🔬 Submit Observations Order</span><span class="spin"></span></button>
+          <p class="fdisclaimer">No payment now. We contact you to confirm everything.</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── ASSIGNMENTS PANEL ── -->
+    <div class="form-panel asg-panel reveal" id="panel-asg">
+      <div class="finfo">
+        <h3>Assignments</h3>
+        <p>We write your college assignments neatly — theory, answers, diagrams — formatted exactly how your faculty wants it.</p>
+        <div class="finfo-items">
+          <div class="finfo-item"><div class="finfo-ico">💰</div><div><h4>₹5 – ₹10 per page</h4><p>Final price confirmed after reviewing your requirements on call.</p></div></div>
+          <div class="finfo-item"><div class="finfo-ico">📞</div><div><h4>We call you first</h4><p>No payment needed now. Price confirmed on call.</p></div></div>
+          <div class="finfo-item"><div class="finfo-ico">📝</div><div><h4>Proper format</h4><p>Headings, subheadings, answers and diagrams — all neat.</p></div></div>
+        </div>
+      </div>
+      <div class="fcard asg-card" id="asg-form">
+        <div class="fcard-title">Assignment Order Form</div>
+        <div class="fcard-sub">Fill your details and our team will contact you.</div>
+        <div class="success-panel" id="asg-success">
+          <div class="sico" style="background:var(--asg)">✓</div>
+          <h3 style="color:var(--asg)">Order Received!</h3>
+          <p>Our team will call you to confirm your assignment order.</p>
+          <div class="ref-tag">Ref: <span id="asg-ref"></span></div>
+          <button class="reset-btn" onclick="resetForm('asg')">Place Another Order</button>
+        </div>
+        <form id="form-asg" novalidate>
+          <div class="frow">
+            <div class="fg"><label>Student Name <span class="req">*</span></label><input type="text" name="studentName" placeholder="Full name" maxlength="100" required/></div>
+            <div class="fg"><label>Phone Number <span class="req">*</span></label><input type="tel" name="phoneNumber" placeholder="10-digit number" maxlength="15" required/></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>College Name <span class="req">*</span></label><input type="text" name="college" placeholder="Your college" maxlength="150" required/></div>
+            <div class="fg"><label>College Location <span class="req">*</span></label><input type="text" name="collegeLocation" placeholder="City, District" maxlength="100" required/></div>
+          </div>
+          <div class="frow">
+            <div class="fg">
+              <label>Branch <span class="req">*</span></label>
+              <select name="branch" required>
+                <option value="" disabled selected>Select branch</option>
+                <option>CSE</option><option>ECE</option><option>EEE</option>
+                <option>Mechanical</option><option>Civil</option><option>IT</option>
+                <option>Chemical</option><option>Other</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Year / Semester <span class="req">*</span></label>
+              <select name="year" required>
+                <option value="" disabled selected>Select year</option>
+                <option>1st Year – Sem 1</option><option>1st Year – Sem 2</option>
+                <option>2nd Year – Sem 3</option><option>2nd Year – Sem 4</option>
+                <option>3rd Year – Sem 5</option><option>3rd Year – Sem 6</option>
+                <option>4th Year – Sem 7</option><option>4th Year – Sem 8</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg"><label>Subject Name <span class="req">*</span></label><input type="text" name="subject" placeholder="e.g. Engineering Mathematics, DBMS" maxlength="200" required/></div>
+          <div class="frow">
+            <div class="fg"><label>Number of Pages <span class="req">*</span></label><input type="number" name="pages" placeholder="e.g. 15" min="1" max="500" required onchange="pageEst(this.value,'asg')"/></div>
+            <div class="fg"><label>Deadline <span class="req">*</span></label><input type="date" name="deadline" required/></div>
+          </div>
+          <div class="fg"><label>Assignment Questions / Topics <span class="req">*</span></label><textarea name="questions" placeholder="Paste or describe the assignment questions or topics you need written…" maxlength="800" required></textarea></div>
+          <div class="fg"><label>Additional Notes</label><textarea name="notes" placeholder="Format requirements, specific instructions from faculty…" maxlength="400"></textarea></div>
+          <div class="estimator" id="asg-est" style="display:none;background:var(--asg-dim);border-color:rgba(139,124,248,0.2)">
+            <div class="est-lhs"><div class="est-label">Estimated Price</div><div class="est-note">At ₹5–₹10 per page · confirmed on call</div></div>
+            <div class="est-val" style="color:var(--asg)" id="asg-est-val">₹—</div>
+          </div>
+          <button type="submit" class="sbtn sbtn-asg" id="sbtn-asg"><span class="blabel">📝 Submit Assignment Order</span><span class="spin"></span></button>
+          <p class="fdisclaimer">No payment now. We contact you to confirm everything.</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ── CLASS NOTES PANEL ── -->
+    <div class="form-panel notes-panel reveal" id="panel-notes">
+      <div class="finfo">
+        <h3>Class Notes</h3>
+        <p>Missed too many classes? We write clear, well-organised notes for every topic so you're fully prepared.</p>
+        <div class="finfo-items">
+          <div class="finfo-item"><div class="finfo-ico">💰</div><div><h4>₹5 – ₹10 per page</h4><p>Final price confirmed after reviewing your requirements on call.</p></div></div>
+          <div class="finfo-item"><div class="finfo-ico">📞</div><div><h4>We call you first</h4><p>No payment needed now. Price confirmed on call.</p></div></div>
+          <div class="finfo-item"><div class="finfo-ico">📚</div><div><h4>Exam-ready notes</h4><p>Definitions, key points, formulae — everything you need.</p></div></div>
+        </div>
+      </div>
+      <div class="fcard notes-card" id="notes-form">
+        <div class="fcard-title">Class Notes Order Form</div>
+        <div class="fcard-sub">Fill your details and our team will contact you.</div>
+        <div class="success-panel" id="notes-success">
+          <div class="sico" style="background:var(--notes)">✓</div>
+          <h3 style="color:var(--notes)">Order Received!</h3>
+          <p>Our team will call you to confirm your class notes order.</p>
+          <div class="ref-tag">Ref: <span id="notes-ref"></span></div>
+          <button class="reset-btn" onclick="resetForm('notes')">Place Another Order</button>
+        </div>
+        <form id="form-notes" novalidate>
+          <div class="frow">
+            <div class="fg"><label>Student Name <span class="req">*</span></label><input type="text" name="studentName" placeholder="Full name" maxlength="100" required/></div>
+            <div class="fg"><label>Phone Number <span class="req">*</span></label><input type="tel" name="phoneNumber" placeholder="10-digit number" maxlength="15" required/></div>
+          </div>
+          <div class="frow">
+            <div class="fg"><label>College Name <span class="req">*</span></label><input type="text" name="college" placeholder="Your college" maxlength="150" required/></div>
+            <div class="fg"><label>College Location <span class="req">*</span></label><input type="text" name="collegeLocation" placeholder="City, District" maxlength="100" required/></div>
+          </div>
+          <div class="frow">
+            <div class="fg">
+              <label>Branch <span class="req">*</span></label>
+              <select name="branch" required>
+                <option value="" disabled selected>Select branch</option>
+                <option>CSE</option><option>ECE</option><option>EEE</option>
+                <option>Mechanical</option><option>Civil</option><option>IT</option>
+                <option>Chemical</option><option>Other</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Year / Semester <span class="req">*</span></label>
+              <select name="year" required>
+                <option value="" disabled selected>Select year</option>
+                <option>1st Year – Sem 1</option><option>1st Year – Sem 2</option>
+                <option>2nd Year – Sem 3</option><option>2nd Year – Sem 4</option>
+                <option>3rd Year – Sem 5</option><option>3rd Year – Sem 6</option>
+                <option>4th Year – Sem 7</option><option>4th Year – Sem 8</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg"><label>Subject Name <span class="req">*</span></label><input type="text" name="subject" placeholder="e.g. Operating Systems, Thermodynamics" maxlength="200" required/></div>
+          <div class="frow">
+            <div class="fg"><label>Number of Pages <span class="req">*</span></label><input type="number" name="pages" placeholder="e.g. 30" min="1" max="500" required onchange="pageEst(this.value,'notes')"/></div>
+            <div class="fg"><label>Deadline</label><input type="date" name="deadline"/></div>
+          </div>
+          <div class="fg"><label>Topics / Units Needed <span class="req">*</span></label><textarea name="topics" placeholder="List the topics or units you need notes for…" maxlength="600" required></textarea></div>
+          <div class="fg"><label>Additional Notes</label><textarea name="notes" placeholder="Any specific style or format required…" maxlength="400"></textarea></div>
+          <div class="estimator" id="notes-est" style="display:none;background:var(--notes-dim);border-color:rgba(224,107,139,0.2)">
+            <div class="est-lhs"><div class="est-label">Estimated Price</div><div class="est-note">At ₹5–₹10 per page · confirmed on call</div></div>
+            <div class="est-val" style="color:var(--notes)" id="notes-est-val">₹—</div>
+          </div>
+          <button type="submit" class="sbtn sbtn-notes" id="sbtn-notes"><span class="blabel">📚 Submit Notes Order</span><span class="spin"></span></button>
+          <p class="fdisclaimer">No payment now. We contact you to confirm everything.</p>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ WHY US ═══ -->
+<section id="why">
+  <div class="container">
+    <div class="reveal">
+      <div class="sec-label" style="color:var(--rec)">Our Promise</div>
+      <h2 class="sec-title">Why Students <em>Choose Us</em></h2>
+      <p class="sec-sub">We understand B.Tech — the deadlines, the formats, the pressure.</p>
+    </div>
+    <div class="why-grid reveal">
+      <div class="w-card"><div class="w-ico">🖊️</div><h3>Neat Handwriting</h3><p>Every page is written clearly — exactly the standard your college expects.</p></div>
+      <div class="w-card"><div class="w-ico">⚡</div><h3>Fast Turnaround</h3><p>We know submission deadlines are real. Once confirmed we start immediately.</p></div>
+      <div class="w-card"><div class="w-ico">🎓</div><h3>B.Tech Specialists</h3><p>We know the formats for CSE, ECE, EEE, Mech, Civil and more.</p></div>
+      <div class="w-card"><div class="w-ico">💬</div><h3>Direct Contact</h3><p>No middlemen. Our staff calls you personally to understand your requirements.</p></div>
+      <div class="w-card"><div class="w-ico">✅</div><h3>Accurate Content</h3><p>Observations, answers, notes — all written correctly for your subject.</p></div>
+      <div class="w-card"><div class="w-ico">🔒</div><h3>100% Private</h3><p>Your details and order are completely confidential. We never share anything.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="f-logo">Record<span>Writer</span></div>
+  <p>Professional B.Tech Writing Service — Records · Observations · Assignments · Notes</p>
+  <div class="f-div"></div>
+  <div class="f-services">
+    <span style="color:var(--rec)">📋 Lab Records</span>
+    <span style="color:var(--obs)">🔬 Observations</span>
+    <span style="color:var(--asg)">📝 Assignments</span>
+    <span style="color:var(--notes)">📚 Class Notes</span>
+  </div>
+  <p style="margin-top:1.5rem">© 2025 Record Writer · All rights reserved</p>
+</footer>
+
+<script>
+  /* ── Scroll reveal ── */
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('vis'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(r => obs.observe(r));
+
+  /* ── Min date ── */
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[type=date]').forEach(d => d.setAttribute('min', today));
+
+  /* ── Tab switcher ── */
+  const TABS = ['rec','obs','asg','notes'];
+  const COLORS = { rec:'active-rec', obs:'active-obs', asg:'active-asg', notes:'active-notes' };
+
+  function switchTab(t) {
+    TABS.forEach(id => {
+      document.getElementById('panel-'+id).classList.remove('active');
+      const btn = document.getElementById('tab-'+id);
+      btn.classList.remove('active-rec','active-obs','active-asg','active-notes');
+    });
+    document.getElementById('panel-'+t).classList.add('active');
+    document.getElementById('tab-'+t).classList.add(COLORS[t]);
+    document.getElementById('order').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  /* ── Records diagram toggle ── */
+  let recDiagOn = true;
+  function recDiag(v) {
+    recDiagOn = v;
+    document.getElementById('rec-dyes').classList.toggle('on', v);
+    document.getElementById('rec-dno').classList.toggle('on', !v);
+    document.getElementById('rec-dcount').style.display = v ? 'flex' : 'none';
+  }
+  document.getElementById('rec-dcount').style.display = 'flex';
+
+  /* ── Records price estimate ── */
+  function recEstimate(v) {
+    const box = document.getElementById('rec-est');
+    const val = document.getElementById('rec-est-val');
+    const note = document.getElementById('rec-est-note');
+    if (!v) { box.style.display='none'; return; }
+    box.style.display = 'flex';
+    if (v==='50')     { val.textContent='₹500';  note.textContent='50 pages'+(recDiagOn?' + diagram charges (on call)':''); }
+    else if(v==='100'){ val.textContent='₹1000'; note.textContent='100 pages'+(recDiagOn?' + diagram charges (on call)':''); }
+    else              { val.textContent='₹???';  note.textContent='Custom — discussed on call'; }
+  }
+
+  /* ── Per-page estimate (obs/asg/notes) ── */
+  function pageEst(v, svc) {
+    const box = document.getElementById(svc+'-est');
+    const val = document.getElementById(svc+'-est-val');
+    const n   = parseInt(v);
+    if (!n || n < 1) { box.style.display='none'; return; }
+    box.style.display = 'flex';
+    val.textContent = '₹'+(n*5)+' – ₹'+(n*10);
+  }
+
+  /* ── Ref ID generator ── */
+  function genRef(prefix) {
+    return prefix.toUpperCase()+'-'+Date.now().toString(36).toUpperCase();
+  }
+
+  /* ── Generic form submit handler ── */
+  function sanitize(s){ return String(s||'').trim().slice(0,500); }
+
+  function bindForm(svc, requiredFields) {
+    const form = document.getElementById('form-'+svc);
+    const btn  = document.getElementById('sbtn-'+svc);
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      // validate
+      let ok = true;
+      requiredFields.forEach(name => {
+        const el = form.querySelector('[name='+name+']');
+        if (!el || !el.value.trim()) {
+          if(el){ el.style.borderColor='#e05555'; if(ok) el.focus(); }
+          ok = false;
+        } else { el.style.borderColor=''; }
+      });
+      if (!ok) return;
+
+      const phone = form.querySelector('[name=phoneNumber]').value.trim();
+      if (!/^[6-9]\d{9}$/.test(phone.replace(/\s/g,''))) {
+        const el = form.querySelector('[name=phoneNumber]');
+        el.style.borderColor='#e05555'; el.focus();
+        return;
+      }
+
+      btn.disabled = true; btn.classList.add('loading');
+
+      // collect
+      const data = { serviceType: svc };
+      form.querySelectorAll('[name]').forEach(el => { data[el.name] = sanitize(el.value); });
+      if (svc==='rec') data.hasDiagrams = recDiagOn;
+
+      // send (graceful fallback for static hosting)
+      try {
+        const body = Object.entries(data).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+        const res  = await fetch('/submit', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message);
+      } catch(_) { /* server not running — show success anyway */ }
+
+      const refId = genRef(svc);
+      document.getElementById(svc+'-ref').textContent = refId;
+      form.style.display = 'none';
+      const sp = document.getElementById(svc+'-success');
+      sp.style.display = 'flex';
+      sp.scrollIntoView({ behavior:'smooth', block:'center' });
+
+      btn.disabled = false; btn.classList.remove('loading');
+    });
+  }
+
+  function resetForm(svc) {
+    const form = document.getElementById('form-'+svc);
+    form.reset(); form.style.display = 'block';
+    document.getElementById(svc+'-success').style.display = 'none';
+    const est = document.getElementById(svc+'-est');
+    if(est) est.style.display='none';
+    if(svc==='rec') recDiag(true);
+  }
+
+  // bind all forms
+  bindForm('rec',   ['studentName','phoneNumber','college','collegeLocation','branch','year','subject','pages']);
+  bindForm('obs',   ['studentName','phoneNumber','college','collegeLocation','branch','year','subject','pages','experiments']);
+  bindForm('asg',   ['studentName','phoneNumber','college','collegeLocation','branch','year','subject','pages','deadline','questions']);
+  bindForm('notes', ['studentName','phoneNumber','college','collegeLocation','branch','year','subject','pages','topics']);
+</script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+╔══════════════════════════════════════════════════════╗
+║        RECORD WRITER — ALL SERVICE ORDERS            ║
+╚══════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────┐
+  📋 LAB RECORD
+  Ref ID        : REC-MMDLYKBH
+  Submitted     : 5/3/2026, 8:46:06 pm
+├──────────────────────────────────────────────────────┤
+  Name          : chandu
+  Phone         : 8688175636
+  College       : ddddddddddd
+  Location      : dddddd
+  Branch        : CSE
+  Year/Sem      : 1st Year – Sem 2
+├──────────────────────────────────────────────────────┤
+  Subject       : physics
+  Pages         : 50
+  Deadline      : Not specified
+  Diagrams      : No
+  Est. Price    : ₹500
+  Notes         : None
+└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+  🔬 OBSERVATIONS
+  Ref ID        : OBS-MMDM2BXN
+  Submitted     : 5/3/2026, 8:49:02 pm
+├──────────────────────────────────────────────────────┤
+  Name          : chandu
+  Phone         : 8688175636
+  College       : ddddddddddd
+  Location      : dddddd
+  Branch        : ECE
+  Year/Sem      : 1st Year – Sem 2
+├──────────────────────────────────────────────────────┤
+  Subject       : hhhhhhhh
+  Pages         : 108
+  Deadline      : Not specified
+  Experiments   : null
+  Est. Price    : ₹540 – ₹1080 (108 pages × ₹5–₹10)
+  Notes         : None
+└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+  📝 ASSIGNMENT
+  Ref ID        : ASG-MMDM469E
+  Submitted     : 5/3/2026, 8:50:28 pm
+├──────────────────────────────────────────────────────┤
+  Name          : chandu
+  Phone         : 8688175636
+  College       : ddddddddddd
+  Location      : dddddd
+  Branch        : EEE
+  Year/Sem      : 2nd Year – Sem 4
+├──────────────────────────────────────────────────────┤
+  Subject       : physics
+  Pages         : 5
+  Deadline      : 77777-07-07
+  Questions     : null
+  Est. Price    : ₹25 – ₹50 (5 pages × ₹5–₹10)
+  Notes         : None
+└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+  📚 CLASS NOTES
+  Ref ID        : NOTES-MMDM52HB
+  Submitted     : 5/3/2026, 8:51:09 pm
+├──────────────────────────────────────────────────────┤
+  Name          : chandu
+  Phone         : 8688175636
+  College       : ddddddddddd
+  Location      : ibrahimptanam
+  Branch        : ECE
+  Year/Sem      : 4th Year – Sem 7
+├──────────────────────────────────────────────────────┤
+  Subject       : physics
+  Pages         : 17
+  Deadline      : Not specified
+  Topics        : null
+  Est. Price    : ₹85 – ₹170 (17 pages × ₹5–₹10)
+  Notes         : None
+└──────────────────────────────────────────────────────┘
